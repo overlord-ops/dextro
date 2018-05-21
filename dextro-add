@@ -26,11 +26,10 @@ for ((number=1;number <= $cps;number++))
 {
 if (( $number <= $cps ))
 then
-mkdir $coin_dir$number
-cp -r $CONFIGFOLDER $coin_dir$number
+cp -r -v -f $CONFIGFOLDER $CONFIGFOLDER$number
 cd $CONFIGFOLDER$number
 #delete the orignal config
-rm $CONFIG_FILE
+rm $CONFIG_FILE >/dev/null 2>&1
 #slide in the new config file
 #listen set to 0 - rpcuser and pass randomize
 #increase rpcport by $number and prompt for new genkey
