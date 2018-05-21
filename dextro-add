@@ -38,7 +38,7 @@ RPCUSER=$(tr -cd '[:alnum:]' < /dev/urandom | fold -w10 | head -n1)
 RPCPASSWORD=$(tr -cd '[:alnum:]' < /dev/urandom | fold -w22 | head -n1)
 echo -e "${GREEN}Creating new config file for $coin_dir$number directory"
 read -p "Please enter the next unique GENKEY for this additional masternode: " UNIQUE_GENKEY
-rport=$RPC_PORT+$number
+rport=$(($RPC_PORT+$number))
 cat > $CONFIG_FILE << EOF
 rpcallowip=127.0.0.1
 rpcuser=$RPCUSER
@@ -55,7 +55,8 @@ addnode=173.212.225.221:39320
 addnode=177.152.49.221:39320
 addnode=45.63.115.225:39320
 EOF
-echo -e "${GREEN}$CONFIG_FILE for $coin_dir2$number created with GENKEY=$UNIQUE_GENKEY.{NC}"
+echo -e "${GREEN}$CONFIG_FILE for $coin_dir2$number created with GENKEY=$UNIQUE_GENKEY.${NC}"
+rm -rf .dextro
 cd
 
 #setup new systemctl services for each new node
@@ -85,7 +86,7 @@ StartLimitBurst=5
 WantedBy=multi-user.target
 EOF
 
-  echo -e "${GREEN}$coin_dir2$number.service created.{NC}"
+  echo -e "${GREEN}$coin_dir2$number.service created. ${NC}"
   systemctl daemon-reload
   sleep 5
   systemctl start $COIN_NAME$number.service
@@ -101,3 +102,5 @@ EOF
 cd
 fi
 }
+clear
+echo done
