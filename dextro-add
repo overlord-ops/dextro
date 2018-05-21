@@ -48,8 +48,8 @@ staking=1
 server=1
 listen=0
 port=$COIN_PORT masternode=1
-masternodeaddr=$NODEIP6:39320
-externalip=$NODEIP6:39320
+masternodeaddr=$NODEIP6
+externalip=$NODEIP6
 masternodeprivkey=$UNIQUE_GENKEY
 addnode=173.212.225.221:39320
 addnode=177.152.49.221:39320
