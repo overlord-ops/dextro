@@ -19,6 +19,11 @@ GREEN="\033[0;32m"
 NC='\033[0m'
 MAG='\e[1;35m'
 
+#stop Dextro.service
+echo 'stopping Dextro.service and waiting 5 seconds before continuing.'
+systemctl stop Dextro.service
+sleep 5 && echo ""
+
 #enter number of additional nodes to create
 read -e -p "Enter how many additional nodes you want to setup: " cps
 for ((number=1;number <= $cps;number++))
