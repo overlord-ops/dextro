@@ -20,30 +20,6 @@ GREEN="\033[0;32m"
 NC='\033[0m'
 MAG='\e[1;35m'
 
-#to alias or not to alias
-read -e -p "Create nodecheck.sh script and add batch alias for easy node checking? [y/n] : " bashitup
-if [[ ("$bashitup" == "y" || "$bashitup" == "Y") ]]; then
-#add .bashrc alias if it's not there already
-cd
-grep -q -F 'alias nodecheck="bash ~/nodecheck.sh"' .bashrc || echo 'alias nodecheck="bash ~/nodecheck.sh"' >> .bashrc
-#create nodecheck script
-cat > nodecheck.sh << EOF
-#!/bin/bash
-read -p "Enter the node number you wish to check: " chknumber
-ps -aux grep | $COIN_DAEMON$chknumber
-$COIN_CLI -datadir=/root/$coin_dir$chknnumber getinfo
-$COIN_CLI -datadir=/root/$coin_dir$chknumber masternode status
-echo "$COIN_CLI -datadir=/root/$coin_dir$chknumber getinfo"
-echo "$COIN_CLI -datadir=/root/$coin_dir$chknumber masternode status"
-EOF
-echo 'nodecheck.sh script created in home directory.'
-#refresh bash file
-source .bashrc
-#make executable
-chmod +x nodecheck.sh
-echo "bash alias setup. you can now enter 'nodecheck' in terminal to check the status of a node"
-fi
-
 #enter number of additional nodes to create
 read -e -p "Enter how many additional nodes you want to setup: " cps
 for ((number=1;number <= $cps;number++))
@@ -62,11 +38,12 @@ RPCUSER=$(tr -cd '[:alnum:]' < /dev/urandom | fold -w10 | head -n1)
 RPCPASSWORD=$(tr -cd '[:alnum:]' < /dev/urandom | fold -w22 | head -n1)
 echo -e "${GREEN}Creating new config file for $coin_dir$number directory"
 read -p "Please enter the next unique GENKEY for this additional masternode: " UNIQUE_GENKEY
+rport=$RPC_PORT+$number
 cat > $CONFIG_FILE << EOF
 rpcallowip=127.0.0.1
 rpcuser=$RPCUSER
 rpcpassword=$RPCPASSWORD
-rpcport=($RPC_PORT+$number)
+rpcport=$rport
 staking=1
 server=1
 listen=0
@@ -122,14 +99,5 @@ EOF
     exit 1
   fi
 cd
-
-echo -e "${GREEN}$COIN_CLI -datadir=/root/$coin_dir$number masternode status"
-echo -e "${GREEN}$COIN_CLI -datadir=/root/$coin_dir$number getinfo"
-echo -e "${RED}Check node - MASTERNODE STATUS {NC}"
-$COIN_CLI -datadir=/root/$coin_dir$number masternode status
-sleep 5
-echo -e "${RED}Check node - GETINFO {NC}"
-$COIN_CLI -datadir=/root/$coin_dir$number getinfo
-echo -e "${GREEN}Done.{NC}"
 fi
 }
