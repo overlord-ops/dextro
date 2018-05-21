@@ -37,6 +37,7 @@ RPCUSER=$(tr -cd '[:alnum:]' < /dev/urandom | fold -w10 | head -n1)
 RPCPASSWORD=$(tr -cd '[:alnum:]' < /dev/urandom | fold -w22 | head -n1)
 echo -e "${GREEN}Creating new config file for $coin_dir$number directory"
 read -p "Please enter the next unique GENKEY for this additional masternode: " UNIQUE_GENKEY
+read -p "Please enter the IPv6 address you wish to assign to this instance: " NODEIP6
 rport=$(($RPC_PORT+$number))
 cat > $CONFIG_FILE << EOF
 rpcallowip=127.0.0.1
@@ -48,7 +49,7 @@ server=1
 listen=0
 port=$COIN_PORT masternode=1
 masternodeaddr=$NODEIP:39320
-externalip=$NODEIP:39320
+externalip=$NODEIP6:39320
 masternodeprivkey=$UNIQUE_GENKEY
 addnode=173.212.225.221:39320
 addnode=177.152.49.221:39320
