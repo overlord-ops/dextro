@@ -1,0 +1,135 @@
+#!/bin/bash
+clear
+echo 'BTC - 1HgPZvFRKuvsuLXwRtrLsJsws7ivZQScJt'
+sleep 5
+CONFIG_FILE='dextro.conf'
+CONFIGFOLDER='/root/.dextro'
+COIN_DAEMON='dextrod'
+COIN_CLI='dextro-cli'
+COIN_PATH='/usr/local/bin/'
+coin_dir='.dextro'
+coin_dir2='dextro'
+COIN_NAME='Dextro'
+COIN_PORT=39320
+RPC_PORT=39321
+NODEIP=$(curl -s4 icanhazip.com)
+
+PURPLE="\033[0;35m"
+RED='\033[0;31m'
+GREEN="\033[0;32m"
+NC='\033[0m'
+MAG='\e[1;35m'
+
+#to alias or not to alias
+read -e -p "Create nodecheck.sh script and add batch alias for easy node checking? [y/n] : " bashitup
+if [[ ("$bashitup" == "y" || "$bashitup" == "Y") ]]; then
+#add .bashrc alias if it's not there already
+cd
+grep -q -F 'alias nodecheck="bash ~/nodecheck.sh"' .bashrc || echo 'alias nodecheck="bash ~/nodecheck.sh"' >> .bashrc
+#create nodecheck script
+cat > nodecheck.sh << EOF
+#!/bin/bash
+read -p "Enter the node number you wish to check: " chknumber
+ps -aux grep | $COIN_DAEMON$chknumber
+$COIN_CLI -datadir=/root/$coin_dir$chknnumber getinfo
+$COIN_CLI -datadir=/root/$coin_dir$chknumber masternode status
+echo "$COIN_CLI -datadir=/root/$coin_dir$chknumber getinfo"
+echo "$COIN_CLI -datadir=/root/$coin_dir$chknumber masternode status"
+EOF
+echo 'nodecheck.sh script created in home directory.'
+#refresh bash file
+source .bashrc
+#make executable
+chmod +x nodecheck.sh
+echo "bash alias setup. you can now enter 'nodecheck' in terminal to check the status of a node"
+fi
+
+#enter number of additional nodes to create
+read -e -p "Enter how many additional nodes you want to setup: " cps
+for ((number=1;number <= $cps;number++))
+{
+if (( $number <= $cps ))
+then
+mkdir $coin_dir$number
+cp -r $coin_dir $coin_dir$number
+cd $CONFIGFOLDER$number
+#delete the orignal config
+rm $CONFIG_FILE
+#slide in the new config file
+#listen set to 0 - rpcuser and pass randomize
+#increase rpcport by $number and prompt for new genkey
+RPCUSER=$(tr -cd '[:alnum:]' < /dev/urandom | fold -w10 | head -n1)
+RPCPASSWORD=$(tr -cd '[:alnum:]' < /dev/urandom | fold -w22 | head -n1)
+echo -e "${GREEN}Creating new config file for $coin_dir$number directory"
+read -p "Please enter the next unique GENKEY for this additional masternode: " UNIQUE_GENKEY
+cat > $CONFIG_FILE << EOF
+rpcallowip=127.0.0.1
+rpcuser=$RPCUSER
+rpcpassword=$RPCPASSWORD
+rpcport=($RPC_PORT+$number)
+staking=1
+server=1
+listen=0
+port=$COIN_PORT masternode=1
+masternodeaddr=$NODEIP:39320
+externalip=$NODEIP:39320
+masternodeprivkey=$UNIQUE_GENKEY
+addnode=173.212.225.221:39320
+addnode=177.152.49.221:39320
+addnode=45.63.115.225:39320
+EOF
+echo -e "${GREEN}$CONFIG_FILE for $coin_dir2$number created with GENKEY=$UNIQUE_GENKEY.{NC}"
+cd
+
+#setup new systemctl services for each new node
+  cat << EOF > /etc/systemd/system/$COIN_NAME$number.service
+[Unit]
+Description=$COIN_NAME$number service
+After=network.target
+
+[Service]
+User=root
+Group=root
+
+Type=forking
+#PIDFile=$CONFIGFOLDER$number/$COIN_NAME$number.pid
+
+ExecStart=$COIN_PATH$COIN_DAEMON -daemon -conf=$CONFIGFOLDER$number/$CONFIG_FILE -datadir=$CONFIGFOLDER$number
+ExecStop=-$COIN_PATH$COIN_CLI -conf=$CONFIGFOLDER$number/$CONFIG_FILE -datadir=$CONFIGFOLDER$number stop
+
+Restart=always
+PrivateTmp=true
+TimeoutStopSec=60s
+TimeoutStartSec=10s
+StartLimitInterval=120s
+StartLimitBurst=5
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+  echo -e "${GREEN}$coin_dir2$number.service created.{NC}"
+  systemctl daemon-reload
+  sleep 5
+  systemctl start $COIN_NAME$number.service
+  systemctl enable $COIN_NAME$number.service >/dev/null 2>&1
+
+  if [[ -z "$(ps axo cmd:100 | egrep $COIN_DAEMON$number)" ]]; then
+    echo -e "${RED}$COIN_NAME$number is not running${NC}, please investigate. You should start by running the following commands as root:"
+    echo -e "${GREEN}systemctl start $COIN_NAME$number.service"
+    echo -e "systemctl status $COIN_NAME#number.service"
+    echo -e "less /var/log/syslog${NC}"
+    exit 1
+  fi
+cd
+
+echo -e "${GREEN}$COIN_CLI -datadir=/root/$coin_dir$number masternode status"
+echo -e "${GREEN}$COIN_CLI -datadir=/root/$coin_dir$number getinfo"
+echo -e "${RED}Check node - MASTERNODE STATUS {NC}"
+$COIN_CLI -datadir=/root/$coin_dir$number masternode status
+sleep 5
+echo -e "${RED}Check node - GETINFO {NC}"
+$COIN_CLI -datadir=/root/$coin_dir$number getinfo
+echo -e "${GREEN}Done.{NC}"
+fi
+}
