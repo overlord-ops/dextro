@@ -12,7 +12,6 @@ coin_dir2='dextro'
 COIN_NAME='Dextro'
 COIN_PORT=39320
 RPC_PORT=39321
-NODEIP=$(curl -s4 icanhazip.com)
 
 PURPLE="\033[0;35m"
 RED='\033[0;31m'
@@ -37,7 +36,11 @@ RPCUSER=$(tr -cd '[:alnum:]' < /dev/urandom | fold -w10 | head -n1)
 RPCPASSWORD=$(tr -cd '[:alnum:]' < /dev/urandom | fold -w22 | head -n1)
 echo -e "${GREEN}Creating new config file for $coin_dir$number directory"
 read -p "Please enter the next unique GENKEY for this additional masternode: " UNIQUE_GENKEY
-read -p "Please enter the IPv6 address you wish to assign to this instance: " NODEIP6
+echo ""
+echo "Please enter your masternodes IPv6 address: "
+read -p "masternodeaddr = " NODEIP6a
+echo "Please enter the external IPv6 address you wish to assign to this node: "
+read -p "externalip = " NODEIP6b
 rport=$(($RPC_PORT+$number))
 cat > $CONFIG_FILE << EOF
 rpcallowip=127.0.0.1
@@ -48,8 +51,8 @@ staking=1
 server=1
 listen=0
 port=$COIN_PORT masternode=1
-masternodeaddr=$NODEIP6
-externalip=$NODEIP6
+masternodeaddr=$NODEIP6a
+externalip=$NODEIP6b
 masternodeprivkey=$UNIQUE_GENKEY
 addnode=173.212.225.221:39320
 addnode=177.152.49.221:39320
